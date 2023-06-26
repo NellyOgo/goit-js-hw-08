@@ -1,34 +1,25 @@
 import throttle from 'lodash.throttle';
-const feedbackForm = document.querySelector('.feedback-form');
-const emailInput = feedbackForm.querySelector('input[name="email"]');
-const messageInput = feedbackForm.querySelector('textarea[name="message"]');
-
-const savedFormState = localStorage.getItem('feedback-form-state');
-if (savedFormState) {
-  const { email, message } = JSON.parse(savedFormState);
-  emailInput.value = email || '';
-  messageInput.value = message || '';
+const FEEDBACK_FORM_STATE = 'feedback-form-state';
+const feedbackFormEl = document.querySelector('.feedback-form');
+const feedbackFormEmail = feedbackFormEl.querySelector('input');
+const feedbackFormMessage = feedbackFormEl.querySelector('textarea');
+let output = JSON.parse(localStorage.getItem(FEEDBACK_FORM_STATE)) || {
+    email: '',
+    message: '',
+};
+feedbackFormEmail.value = output.email;
+feedbackFormMessage.value = output.message;
+feedbackFormEl.addEventListener('input', throttle(setFeedbackForm, 500));
+function setFeedbackForm(event) {
+    output[event.target.name] = event.target.value;
+    localStorage.setItem(FEEDBACK_FORM_STATE, JSON.stringify(output));
+    feedbackFormEl.addEventListener('submit', getFeedbackForm);
+    function getFeedbackForm(evt) {
+        evt.preventDefault();
+        console.log(output);
+        evt.target.reset();
+        output = { email: '', message: '' };
+        localStorage.removeItem(FEEDBACK_FORM_STATE);
+    }
 }
-emailInput.addEventListener('input', throttle(saveFormState, 500));
-messageInput.addEventListener('input', throttle(saveFormState, 500));
 
-function saveFormState() {
-  const formState = {
-    email: emailInput.value,
-    message: messageInput.value,
-  };
-  localStorage.setItem('feedback-form-state', JSON.stringify(formState));
-}
-
-feedbackForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    
-      emailInput.value = '';
-    messageInput.value = '';
-    
-      const formState = {
-    email: emailInput.value,
-    message: messageInput.value,
-  };
-  console.log(formState);
-});
